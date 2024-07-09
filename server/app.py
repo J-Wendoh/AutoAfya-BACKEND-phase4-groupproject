@@ -1,10 +1,29 @@
 # save this as app.py
-from flask import Flask, request
-from markupsafe import escape
+from flask import request, session
+from flask_restful import Resource
+# from sqlalchemy.exc import IntegrityError
 
-app = Flask(__name__)
+from config import app, db, api
+from models import User
 
 @app.route('/')
 def hello():
-    name = request.args.get("name", "World")
-    return f'Hello, {escape(name)}!'
+    return f'Hello there!'
+
+class Login(Resource):
+    def post(self):
+        request_json = request.get_json()
+
+        username = request_json.get('username')
+        password = request_json.get('password')
+
+        user = User.query.filter(User.username == username).first()
+
+        if user:
+            if user.authenticate(password):
+                session['user_id'] = user.id
+                return user.to_dict(), 200
+
+        return {'error': '401 Unauthorized'}, 401
+
+api.add_resource(Login, '/login', endpoint='login')
