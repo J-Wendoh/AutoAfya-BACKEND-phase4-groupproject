@@ -1,42 +1,33 @@
 # save this as app.py
-from flask import request, session, make_response, jsonify
-from flask_restful import Resource
+
+from flask import Flask, request, session, make_response, jsonify
+from flask_migrate import Migrate
+from auth import auth_bp, bcrypt, jwt
+from customer import customer_bp
+from models import db, User, Service
 # from sqlalchemy.exc import IntegrityError
 
-from config import app, db, api
-from models import User, Service
+
+app = Flask(__name__)
+app.secret_key = b'63969f31642049b6867473ddf8e3ff5e'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.json.compact = False
+
+app.register_blueprint(customer_bp)
+app.register_blueprint(auth_bp)
+
+
+bcrypt.init_app(app)
+db.init_app(app)
+jwt.init_app(app)
+migrate = Migrate(app=app, db=db)
+
+
 
 @app.route('/')
 def hello():
     return f'Hello there!'
-
-class Login(Resource):
-    def post(self):
-        request_json = request.get_json()
-
-        username = request_json.get('username')
-        password = request_json.get('password')
-
-        user = User.query.filter(User.username == username).first()
-
-        if user:
-            if user.authenticate(password):
-                session['user_id'] = user.id
-                return user.to_dict(), 200
-
-        return {'error': '401 Unauthorized'}, 401
-
-api.add_resource(Login, '/login', endpoint='login')
-
-class ServiceList(Resource):
-    def get(self):
-        services = [service.to_dict() for service in Service.query.all()]
-        return make_response(jsonify(services), 200)
-
-api.add_resource(ServiceList, '/services')
-
-
-
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
