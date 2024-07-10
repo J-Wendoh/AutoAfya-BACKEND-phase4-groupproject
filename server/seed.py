@@ -28,7 +28,7 @@ with app.app_context():
         user = User(
             username=username,
             email=fake.email(),
-            _password_hash=fake.password()  # Generate a random password
+            password=fake.password()  # Generate a random password
         )
 
         users.append(user)
