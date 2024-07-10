@@ -1,6 +1,6 @@
 from flask import Blueprint, request, session, make_response, jsonify
 from flask_jwt_extended import jwt_required, current_user, get_jwt_identity
-from models import db, Booking, Service, BookingService, User
+from models import db, Booking, Service, BookingService, User, Review
 from flask_restful import Api, Resource, reqparse
 from datetime import datetime
 # from auth import allow
@@ -180,3 +180,142 @@ customer_api.add_resource(DeleteBooking, '/booking/<int:booking_id>/delete')
 
 
 
+class CreateReview(Resource):
+
+    @jwt_required()
+    def post(self):
+        # Define request parser and expected arguments
+        parser = reqparse.RequestParser()
+        parser.add_argument('service_id', required=True, type=int, help='Service ID is required')
+        parser.add_argument('content', required=True, type=str, help='Content is required')
+        parser.add_argument('rating', required=True, type=int, help='Rating is required')
+        args = parser.parse_args()
+
+        # Get current user ID from JWT token
+        user_id = int(get_jwt_identity())
+
+        # Check if the service_id is valid
+        service = Service.query.get(args['service_id'])
+        if not service:
+            return {'message': 'Service not found'}, 404
+
+        # Validate rating range (1 to 5)
+        if not (1 <= args['rating'] <= 5):
+            return {'message': 'Rating must be between 1 and 5'}, 400
+
+        try:
+            # Create a new review
+            review = Review(
+                user_id=user_id,
+                service_id=args['service_id'],
+                content=args['content'],
+                rating=args['rating']
+            )
+
+            db.session.add(review)
+            db.session.commit()
+
+            # Prepare response
+            response_data = {
+                'message': 'Review created successfully',
+                'review_id': review.id,
+                'service_id': review.service_id,
+                'content': review.content,
+                'rating': review.rating
+            }
+
+            return make_response(jsonify(response_data), 201)
+
+        except Exception as e:
+            db.session.rollback()
+            return {'message': 'Failed to create review', 'error': str(e)}, 500
+
+customer_api.add_resource(CreateReview, '/review')
+
+
+class ReviewsByOthers(Resource):
+
+    def get(self):
+        # Query all reviews and include user details
+        reviews = Review.query.join(User, Review.user_id == User.id).all()
+
+        # Prepare the response data
+        reviews_data = []
+        for review in reviews:
+            review_data = {
+                'review_id': review.id,
+                'user_id': review.user_id,
+                'username': review.user.username,
+                'service_id': review.service_id,
+                'content': review.content,
+                'rating': review.rating
+            }
+            reviews_data.append(review_data)
+
+        return make_response(jsonify(reviews_data), 200)
+
+customer_api.add_resource(ReviewsByOthers, '/reviews/all')
+
+class UpdateReview(Resource):
+
+    @jwt_required()
+    def patch(self, review_id):
+        # Parse and validate request arguments
+        parser = reqparse.RequestParser()
+        parser.add_argument('content', type=str, help='Content of the review')
+        parser.add_argument('rating', type=int, help='Rating of the review (1-5)')
+        args = parser.parse_args()
+
+        # Get current user ID from JWT token
+        current_user_id = get_jwt_identity()
+
+        # Query the review to update
+        review = Review.query.filter_by(id=review_id, user_id=current_user_id).first()
+        if not review:
+            return {'message': 'Review not found or you are not authorized to update it'}, 404
+
+        # Update review attributes if provided in the request
+        if 'content' in args:
+            review.content = args['content']
+        if 'rating' in args:
+            review.rating = args['rating']
+
+        try:
+            db.session.commit()
+            return make_response(jsonify({
+                'message': 'Review updated successfully',
+                'review_id': review.id,
+                'content': review.content,
+                'rating': review.rating
+            }), 200)
+        except Exception as e:
+            db.session.rollback()
+            return {'message': 'Failed to update review', 'error': str(e)}, 500
+
+customer_api.add_resource(UpdateReview, '/review/<int:review_id>')
+
+
+class DeleteReview(Resource):
+
+    @jwt_required()
+    def delete(self, review_id):
+        # Get current user ID from JWT token
+        current_user_id = get_jwt_identity()
+
+        # Query the review to delete
+        review = Review.query.filter_by(id=review_id, user_id=current_user_id).first()
+        if not review:
+            return {'message': 'Review not found or you are not authorized to delete it'}, 404
+
+        try:
+            db.session.delete(review)
+            db.session.commit()
+            return make_response(jsonify({
+                'message': 'Review deleted successfully',
+                'review_id': review.id
+            }), 200)
+        except Exception as e:
+            db.session.rollback()
+            return {'message': 'Failed to delete review', 'error': str(e)}, 500
+
+customer_api.add_resource(DeleteReview, '/review/<int:review_id>/delete')
