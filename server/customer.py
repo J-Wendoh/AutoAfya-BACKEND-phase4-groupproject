@@ -97,3 +97,86 @@ class BookingById(Resource):
 
 customer_api.add_resource(BookingById, '/booking')
 
+
+
+class UpdateBooking(Resource):
+
+    @jwt_required()
+    def patch(self, booking_id):
+        # Define request parser and expected arguments
+        parser = reqparse.RequestParser()
+        parser.add_argument('booking_date', required=False, type=str)
+        parser.add_argument('service_ids', required=False, type=list, location='json')
+        args = parser.parse_args()
+
+        # Get current user ID from JWT token
+        user_id = int(get_jwt_identity())
+
+        # Fetch the booking to be updated
+        booking = Booking.query.filter_by(id=booking_id, user_id=user_id).first()
+        if not booking:
+            return {'message': 'Booking not found or you are not authorized to update this booking'}, 404
+
+        # Update booking date if provided
+        if args['booking_date']:
+            try:
+                booking_date = datetime.strptime(args['booking_date'], '%d/%m/%Y').date()
+                booking.booking_date = booking_date
+            except ValueError:
+                return {'message': 'Invalid date format. Use DD/MM/YYYY.'}, 400
+
+        # Update services if provided
+        if args['service_ids']:
+            # Clear existing services
+            BookingService.query.filter_by(booking_id=booking_id).delete()
+            # Fetch new services and calculate total cost
+            service_ids = args['service_ids']
+            services = Service.query.filter(Service.id.in_(service_ids)).all()
+            if not services:
+                return {'message': 'No valid services found.'}, 400
+
+            total_cost = sum(service.cost for service in services)
+            booking.total_cost = total_cost
+
+            # Create new BookingService entries
+            for service in services:
+                booking_service = BookingService(booking_id=booking.id, service_id=service.id)
+                db.session.add(booking_service)
+
+        db.session.commit()
+
+        return make_response(jsonify({'message': 'Booking updated successfully', 'booking_id': booking.id,'booking_date': booking.booking_date.strftime('%d/%m/%Y'),'total_cost': booking.total_cost}), 200)
+
+customer_api.add_resource(UpdateBooking, '/booking/<int:booking_id>')
+
+
+
+class DeleteBooking(Resource):
+
+    @jwt_required()
+    def delete(self, booking_id):
+        # Get current user ID from JWT token
+        user_id = int(get_jwt_identity())
+
+        # Fetch the booking to be deleted
+        booking = Booking.query.filter_by(id=booking_id, user_id=user_id).first()
+        if not booking:
+            return {'message': 'Booking not found or you are not authorized to delete this booking'}, 404
+
+        try:
+            # Delete associated BookingService entries
+            BookingService.query.filter_by(booking_id=booking.id).delete()
+
+            # Delete the booking itself
+            db.session.delete(booking)
+            db.session.commit()
+
+            return {'message': 'Booking deleted successfully', 'booking_id': booking.id}, 200
+
+        except Exception as e:
+            db.session.rollback()
+            return {'message': 'Failed to delete booking', 'error': str(e)}, 500
+customer_api.add_resource(DeleteBooking, '/booking/<int:booking_id>/delete')
+
+
+
