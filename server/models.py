@@ -1,6 +1,12 @@
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.associationproxy import association_proxy
-from config import db
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import MetaData
+
+metadata = MetaData(naming_convention={
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+})
+db = SQLAlchemy(metadata=metadata)
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
@@ -77,6 +83,12 @@ class Review(db.Model, SerializerMixin):
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     rating = db.Column(db.Integer, nullable=False)
+
+    # Check constraint to limit rating to values between 1 and 5
+    __table_args__ = (
+        db.CheckConstraint('rating >= 1'),
+        db.CheckConstraint('rating <= 5')
+    )
 
     user = db.relationship('User', back_populates='reviews')
     service = db.relationship('Service', back_populates='reviews')
