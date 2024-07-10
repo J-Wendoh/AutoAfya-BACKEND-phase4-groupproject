@@ -84,6 +84,12 @@ class Review(db.Model, SerializerMixin):
     content = db.Column(db.Text, nullable=False)
     rating = db.Column(db.Integer, nullable=False)
 
+    # Check constraint to limit rating to values between 1 and 5
+    __table_args__ = (
+        db.CheckConstraint('rating >= 1'),
+        db.CheckConstraint('rating <= 5')
+    )
+
     user = db.relationship('User', back_populates='reviews')
     service = db.relationship('Service', back_populates='reviews')
 
