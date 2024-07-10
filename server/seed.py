@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 from random import randint, choice as rc
-
 from faker import Faker
-
 from app import app
-from models import db, User
+from models import db, User, Service
 
 fake = Faker()
 
@@ -13,17 +11,15 @@ with app.app_context():
 
     print("Deleting all records...")
     User.query.delete()
-
-    fake = Faker()
+    Service.query.delete()  # Add this line to delete existing services
 
     print("Creating users...")
 
-    # make sure users have unique usernames
+    # Make sure users have unique usernames
     users = []
     usernames = set()
 
-    for i in range(20):
-
+    for i in range(10):
         username = fake.first_name().lower()  # Ensure lowercase usernames
         while username in usernames:
             username = fake.first_name().lower()
@@ -31,22 +27,36 @@ with app.app_context():
 
         user = User(
             username=username,
-            email= fake.email(),
-            image_url=fake.url(),
+            email=fake.email(),
+            _password_hash=fake.password()  # Generate a random password
         )
-
-        user.password_hash = user.username + 'password'
 
         users.append(user)
 
     db.session.add_all(users)
 
+    print("Creating services...")
+
+    service_names = [
+        "Oil Change", "Brake Inspection", "Tire Rotation", "Battery Check",
+        "Wiper Blade Replacement", "Wheel Alignment", "Transmission Service"
+    ]
+
+    services = []
+
+    for name in service_names:
+        service = Service(
+            name=name,
+            description=fake.text(max_nb_chars=100),
+            cost=round(fake.random_number(digits=2) + fake.random.random(), 2)  # Generate a random cost
+        )
+        services.append(service)
+
+    db.session.add_all(services)
 
     try:
-        db.session.add_all(users)
         db.session.commit()
         print("Complete.")
     except Exception as e:
-        print(f"Error creating users: {e}")
+        print(f"Error creating records: {e}")
         db.session.rollback()  # Rollback on error
-
