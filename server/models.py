@@ -1,6 +1,7 @@
 # from sqlalchemy.orm import validates
 # from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_serializer import SerializerMixin
+from sqlalchemy.ext.associationproxy import association_proxy
 
 from config import db
 
@@ -28,10 +29,16 @@ class Booking(db.Model, SerializerMixin):
     total_cost = db.Column(db.Float, nullable=False, default=0.0)
 
     user = db.relationship('User', back_populates='bookings')
-    services = db.relationship('BookingService', back_populates='booking')
+
+    # Relationship mapping the booking to related bookingservice
+    bookingservice=db.relationship('Bookingservice', back_populates='booking', cascade='all, delete-orphan')
+
+    # Association proxy to get services for this booking through bookingservice
+    services = association_proxy('bookingservices','service', creator=lambda service_obj:BookingService (service=service_obj))
+
 
     def __repr__(self):
-        return f'<Booking {self.total_cost}>'
+        return f'<Booking {self.id}| {self.booking_date} |{self.total_cost}>'
 
 class Service(db.Model, SerializerMixin):
     __tablename__ = 'services'
@@ -43,8 +50,14 @@ class Service(db.Model, SerializerMixin):
 
     reviews = db.relationship('Review', back_populates='service')
 
+    # Relationship mapping the service to related bookingservice
+    bookingservice=db.relationship('Bookingservice', back_populates='service', cascade='all,delete-orphan')
+
+    # Association proxy to get bookings for this service through bookingservice
+    bookings = association_proxy('bookingservices','booking', creator=lambda booking_obj:BookingService (booking=booking_obj))
+
     def __repr__(self):
-        return f'<Service {self.name}>'
+        return f'<Service {self.name} | {self.cost}>'
 
 class BookingService(db.Model, SerializerMixin):
     __tablename__ = 'bookingservices'
@@ -53,11 +66,13 @@ class BookingService(db.Model, SerializerMixin):
     booking_id = db.Column(db.Integer, db.ForeignKey('bookings.id'), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
 
-    booking = db.relationship('Booking', back_populates='services')
-    service = db.relationship('Service')
+    # Relationship mapping the assignment to related booking
+    booking = db.relationship('Booking', back_populates='bookingservices')
+    # Relationship mapping the bookingservice to related service
+    service = db.relationship('Service', back_populates= 'bookingservices')
 
     def __repr__(self):
-        return f'<Service {self.name}>'
+        return f'<Booking Service {self.id} | {self.service.name} | {self.booking.booking_date}>'
 
 class Review(db.Model):
     __tablename__ = 'reviews'
