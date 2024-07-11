@@ -1,14 +1,24 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, make_response
 from flask_restful import Api, Resource, reqparse
 from models import User, db
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import create_access_token, JWTManager, create_refresh_token, jwt_required, current_user
+from flask_jwt_extended import create_access_token, JWTManager, create_refresh_token, jwt_required, current_user, get_jwt
 from functools import wraps
+
+JWT_BLACKLIST_ENABLED = True
+JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']
+
 
 auth_bp = Blueprint('auth_bp', __name__, url_prefix='/auth')
 bcrypt = Bcrypt()
 jwt = JWTManager()
 auth_api = Api(auth_bp)
+BLACKLIST = set()
+
+
+@jwt.token_in_blocklist_loader
+def check_if_token_in_blacklist(jwt_header, jwt_payload):
+    return jwt_payload['jti'] in BLACKLIST
 
 
 @jwt.user_lookup_loader
@@ -62,6 +72,21 @@ class Login(Resource):
         token = create_access_token(identity= current_user.id )
         return {"token":token}
 
+
+class Logout(Resource):
+
+    @jwt_required()
+    def post(self):
+        # Get the JWT token's JTI (unique identifier)
+        jti = get_jwt()['jti']
+
+        # Add the JTI to the blacklist
+        BLACKLIST.add(jti)
+
+        return make_response(jsonify({'message': 'Successfully logged out'}), 200)
+
+
 # routes
 auth_api.add_resource(Register, '/register')
 auth_api.add_resource(Login, '/login')
+auth_api.add_resource(Logout, '/logout')
