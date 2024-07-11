@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, current_user, get_jwt_identity
 from models import db, Booking, Service, BookingService, User, Review
 from flask_restful import Api, Resource, reqparse
 from datetime import datetime
-# from auth import allow
+
 customer_bp = Blueprint('customer_bp',__name__, url_prefix='/customer')
 
 

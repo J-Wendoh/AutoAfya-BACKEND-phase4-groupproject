@@ -47,6 +47,7 @@ class Service(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
     description = db.Column(db.String(80))
+    service_image = db.Column(db.String)
     cost = db.Column(db.Float, nullable=False)
 
     reviews = db.relationship('Review', back_populates='service')
@@ -66,6 +67,7 @@ class BookingService(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     booking_id = db.Column(db.Integer, db.ForeignKey('bookings.id'), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
+    date_created = db.Column(db.DateTime, server_default=db.func.now())
 
     # Relationship mapping the bookingservice to related booking
     booking = db.relationship('Booking', back_populates='bookingservices')
