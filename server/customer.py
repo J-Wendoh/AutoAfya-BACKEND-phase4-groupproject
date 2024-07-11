@@ -14,7 +14,7 @@ booking_args = reqparse.RequestParser()
 
 class ServiceResource(Resource):
 
-    @jwt_required()
+    # @jwt_required()
     def get(self):
         services = [service.to_dict() for service in Service.query.all()]
         # return make_response(jsonify(services), 200)
