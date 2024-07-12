@@ -319,3 +319,25 @@ class DeleteReview(Resource):
             return {'message': 'Failed to delete review', 'error': str(e)}, 500
 
 customer_api.add_resource(DeleteReview, '/review/<int:review_id>/delete')
+
+class UserReviews(Resource):
+
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+
+        reviews = Review.query.filter_by(user_id=user_id).all()
+
+        reviews_data = [
+            {
+                'review_id': review.id,
+                'service_id': review.service_id,
+                'content': review.content,
+                'rating': review.rating
+            }
+            for review in reviews
+        ]
+
+        return make_response(jsonify(reviews_data), 200)
+
+customer_api.add_resource(UserReviews, '/reviews/user')
