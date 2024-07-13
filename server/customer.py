@@ -311,3 +311,12 @@ class ReviewsByService(Resource):
 
 customer_api.add_resource(ReviewsByService, '/services/<int:service_id>/reviews')
 
+class ServiceById(Resource):
+    def get(self, service_id):
+        service = Service.query.get(service_id)
+        if not service:
+            return {'message': 'Service not found'}, 404
+
+        return service.to_dict()
+
+customer_api.add_resource(ServiceById, '/services/<int:service_id>')
