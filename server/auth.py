@@ -83,7 +83,7 @@ class Logout(Resource):
         # Add the JTI to the blacklist
         BLACKLIST.add(jti)
 
-        return make_response(jsonify({'message': 'Successfully logged out'}), 200)
+        return make_response(jsonify({'message': 'Successfully logged out'}))
 
 
 # routes
