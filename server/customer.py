@@ -290,3 +290,24 @@ class UserReviews(Resource):
         return make_response(jsonify(reviews_data), 200)
 
 customer_api.add_resource(UserReviews, '/reviews/user')
+
+class ReviewsByService(Resource):
+    def get(self, service_id):
+        reviews = Review.query.filter_by(service_id=service_id).join(User, Review.user_id == User.id).all()
+
+        reviews_data = []
+        for review in reviews:
+            review_data = {
+                'review_id': review.id,
+                'user_id': review.user_id,
+                'username': review.user.username,
+                'service_id': review.service_id,
+                'content': review.content,
+                'rating': review.rating
+            }
+            reviews_data.append(review_data)
+
+        return make_response(jsonify(reviews_data), 200)
+
+customer_api.add_resource(ReviewsByService, '/services/<int:service_id>/reviews')
+
