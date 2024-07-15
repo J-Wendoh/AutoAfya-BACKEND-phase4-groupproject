@@ -15,6 +15,20 @@ class ServiceResource(Resource):
 
 customer_api.add_resource(ServiceResource, '/services')
 
+class FetchUsername(Resource):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        
+        if not user:
+            return {'message': 'User not found'}, 404
+        
+        return make_response(jsonify({'username': user.username}), 200)
+
+customer_api.add_resource(FetchUsername, '/username')
+
+
 class BookingById(Resource):
 
     @jwt_required()
