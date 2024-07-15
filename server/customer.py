@@ -222,6 +222,7 @@ class CreateReview(Resource):
                 'service_id': review.service_id,
                 'content': review.content,
                 'rating': review.rating
+
             }
 
             return make_response(jsonify(response_data), 201)
@@ -234,7 +235,7 @@ customer_api.add_resource(CreateReview, '/review')
 
 
 class ReviewsByOthers(Resource):
-
+    @jwt_required()
     def get(self):
         # Query all reviews and include user details
         reviews = Review.query.join(User, Review.user_id == User.id).all()

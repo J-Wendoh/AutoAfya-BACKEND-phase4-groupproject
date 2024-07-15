@@ -5,6 +5,7 @@ from flask_migrate import Migrate
 from auth import auth_bp, bcrypt, jwt
 from customer import customer_bp
 from models import db, User, Service
+from flask_cors import CORS
 # from sqlalchemy.exc import IntegrityError
 
 
@@ -22,7 +23,7 @@ bcrypt.init_app(app)
 db.init_app(app)
 jwt.init_app(app)
 migrate = Migrate(app=app, db=db)
-
+CORS(app)
 
 
 @app.route('/')
