@@ -2,7 +2,7 @@
 
 Welcome to the AutoAfya Backend repository! This project is a collaborative effort between Joanne Wendoh, Alvin Obala, and Arnold Kisuri. AutoAfya is a motor car servicing application designed to streamline the car maintenance process for users. This repository contains the backend code for the application, which is built using Flask.
 
-## App was deployed and this is the live link: ------------
+## App was deployed and this is the live link: https://autoafya-backend-phase4-groupproject-iqky.onrender.com
 
 ## The frontend repo link: [AutoAfya Frontend](https://github.com/J-Wendoh/AutoAfya-FRONTEND-phase4-groupproject)
 
