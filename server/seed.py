@@ -47,7 +47,7 @@ with app.app_context():
     for name in service_names:
         service = Service(
             name=name,
-            description=fake.text(max_nb_chars=100),
+            description=fake.text(max_nb_chars=80),
             cost=round(fake.random_number(digits=2) + fake.random.random(), 2)  # Generate a random cost
         )
         services.append(service)
