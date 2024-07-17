@@ -40,38 +40,32 @@ login_args.add_argument('password')
 class Register(Resource):
 
     def post(self):
-
         data = register_args.parse_args()
-        hashed_password = bcrypt.generate_password_hash(data.get('password'))
-        new_user = User(email=data.get('email'), username=data.get(
-            'username'), password=hashed_password)
+        hashed_password = bcrypt.generate_password_hash(data.get('password')).decode('utf-8')
+        new_user = User(email=data.get('email'), username=data.get('username'), password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
 
-        return {"msg": 'user created successfully'}
+        return {"msg": 'User created successfully'}, 201
 
 class Login(Resource):
 
     def post(self):
         data = login_args.parse_args()
-        # check if the user exists in our db
         user = User.query.filter_by(email=data.get('email')).first()
-        if not user:
-            return {"msg": "User Does not exists in our DataBase"}
-        if not bcrypt.check_password_hash(user.password, data.get('password')):
-            return {"msg": "Password is incorrect!"}
-        # check if the password is correct
 
-        # login
+        if not user:
+            return {"msg": "User does not exist in our database"}, 404
+
+        print(f"Stored password hash: {user.password}")
+        print(f"Provided password: {data.get('password')}")
+
+        if not bcrypt.check_password_hash(user.password, data.get('password')):
+            return {"msg": "Password is incorrect!"}, 401
+
         token = create_access_token(identity=user.id)
         refresh_token = create_refresh_token(identity=user.id)
-        return {"token": token, "refresh_token": refresh_token}
-
-    @jwt_required(refresh=True)
-    def get(self):
-        token = create_access_token(identity= current_user.id )
-        return {"token":token}
-
+        return {"token": token, "refresh_token": refresh_token}, 200
 
 class Logout(Resource):
 

@@ -11,7 +11,7 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 app.secret_key = b'63969f31642049b6867473ddf8e3ff5e'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://auto_afya_database_user:sMLKPChjBlh0zgGMCxkS8cFSFolr089c@dpg-cqbee3dds78s73aajb40-a.oregon-postgres.render.com/auto_afya_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
