@@ -77,10 +77,61 @@ The API will be available at `http://localhost:5000`.
 
 ### API Endpoints
 
-- `GET /restaurants`: Returns JSON data for all restaurants.
-- `GET /restaurants/:id`: Returns JSON data for a specific restaurant or handles non-existing restaurant.
-- `GET /pizzas`: Returns JSON data for all pizzas.
-- `GET /pizzas/:id`: Returns JSON data for a specific pizza or handles non-existing pizza.
+####Get all services:
+
+URL: /customer/services
+Method: GET
+Get service by ID:
+
+URL: /customer/services/<int:service_id>
+Method: GET
+Get reviews for a specific service:
+
+URL: /customer/services/<int:service_id>/reviews
+Method: GET
+
+####Booking Endpoints:
+
+Create or get bookings for the current user:
+
+URL: /customer/booking
+Method: POST or GET
+Update a specific booking by ID:
+
+URL: /customer/booking/<int:booking_id>
+Method: PATCH
+Delete a specific booking by ID:
+
+URL: /customer/booking/<int:booking_id>/delete
+Method: DELETE
+
+####User Endpoints:
+
+Fetch the username of the current user:
+URL: /customer/username
+Method: GET
+Review Endpoints:
+Create a review:
+
+URL: /customer/review
+Method: POST
+Update a specific review by ID:
+
+URL: /customer/review/<int:review_id>
+Method: PATCH
+Delete a specific review by ID:
+
+URL: /customer/review/<int:review_id>/delete
+Method: DELETE
+Get all reviews:
+
+URL: /customer/reviews/all
+Method: GET
+Get reviews by the current user:
+
+URL: /customer/reviews/user
+Method: GET
+
 
 ## Contributing
 
