@@ -62,7 +62,7 @@ class BookingById(Resource):
 
         db.session.commit()
 
-        return make_response(jsonify({'message': 'Booking created successfully', 'booking_id': booking.id, 'total_cost': total_cost}), 201)
+        return make_response(jsonify({'message': 'Booking created successfully', 'booking_id': booking.id}), 201)
 
     @jwt_required()
     def get(self):
